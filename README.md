@@ -289,7 +289,7 @@ Este proyecto fue desarrollado como parte del Trabajo Práctico Final de la mate
 7. Código documentado y funcional
 
 ## Autor
-
+Ayelen Rojas
 Desarrollado para el TP3 de la Tecnicatura en Desarrollo de Software.
 
 ## Licencia
