@@ -1,0 +1,78 @@
+graph TB
+    subgraph Clientes["Capa de Clientes"]
+        C1[Contador 1<br/>Web Browser]
+        C2[Contador 2<br/>Web Browser]
+        C3[Contador N<br/>Web Browser]
+    end
+
+    subgraph LoadBalancing["Balanceo de Carga"]
+        LB[HAProxy<br/>Load Balancer<br/>Puerto 8080]
+    end
+
+    subgraph ServidoresSocket["Servidores Socket"]
+        SS1[Servidor Socket 1<br/>Puerto 9001<br/>Pool: 10 hilos]
+        SS2[Servidor Socket 2<br/>Puerto 9002<br/>Pool: 10 hilos]
+        SS3[Servidor Socket 3<br/>Puerto 9003<br/>Pool: 10 hilos]
+    end
+
+    subgraph ColasMensajes["Sistema de Mensajería"]
+        RMQ[(RabbitMQ<br/>Cola de Tareas)]
+        Q1[Cola: liquidacion]
+        Q2[Cola: reportes]
+        Q3[Cola: archivos_bancarios]
+        Q4[Cola: cargas_sociales]
+    end
+
+    subgraph Workers["Workers Especializados"]
+        W1[Worker Liquidación<br/>- Cálculo sueldos<br/>- Validación convenios<br/>Pool: 5 hilos]
+        W2[Worker Reportes<br/>- PDF recibos<br/>- Reportes sindicales<br/>Pool: 5 hilos]
+        W3[Worker Archivos<br/>- TXT bancarios<br/>- Exportaciones<br/>Pool: 3 hilos]
+        W4[Worker Cargas<br/>- AFIP/ARCA<br/>- Obras sociales<br/>Pool: 3 hilos]
+    end
+
+    subgraph Almacenamiento["Capa de Almacenamiento"]
+        DB[(PostgreSQL<br/>- empresas<br/>- empleados<br/>- conceptos<br/>- convenios<br/>- liquidaciones)]
+        S3[(S3/MinIO<br/>- PDFs recibos<br/>- archivos TXT<br/>- reportes)]
+    end
+
+    C1 -->|TCP Socket| LB
+    C2 -->|TCP Socket| LB
+    C3 -->|TCP Socket| LB
+
+    LB -->|Round Robin| SS1
+    LB -->|Round Robin| SS2
+    LB -->|Round Robin| SS3
+
+    SS1 -->|Publica tareas| RMQ
+    SS2 -->|Publica tareas| RMQ
+    SS3 -->|Publica tareas| RMQ
+
+    RMQ --> Q1
+    RMQ --> Q2
+    RMQ --> Q3
+    RMQ --> Q4
+
+    Q1 -->|Consume| W1
+    Q2 -->|Consume| W2
+    Q3 -->|Consume| W3
+    Q4 -->|Consume| W4
+
+    W1 -->|Lee/Escribe| DB
+    W2 -->|Lee/Escribe| DB
+    W3 -->|Lee/Escribe| DB
+    W4 -->|Lee/Escribe| DB
+
+    W2 -->|Guarda PDFs| S3
+    W3 -->|Guarda TXT| S3
+    W4 -->|Guarda Declaraciones| S3
+
+    SS1 -.->|Lee resultados| RMQ
+    SS2 -.->|Lee resultados| RMQ
+    SS3 -.->|Lee resultados| RMQ
+
+    style Clientes fill:#e1f5ff
+    style LoadBalancing fill:#fff4e1
+    style ServidoresSocket fill:#ffe1f5
+    style ColasMensajes fill:#f5e1ff
+    style Workers fill:#e1ffe1
+    style Almacenamiento fill:#ffe1e1
