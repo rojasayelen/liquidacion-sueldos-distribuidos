@@ -183,6 +183,134 @@ def tarea_generica():
         return jsonify({'status': 'error', 'mensaje': str(e)}), 500
 
 
+@app.route('/api/liquidaciones', methods=['GET'])
+def obtener_liquidaciones():
+    """Obtiene las últimas liquidaciones procesadas"""
+    try:
+        from common.database import Database
+        db = Database()
+        
+        query = """
+            SELECT l.id, l.periodo, l.estado, l.sueldo_bruto, l.sueldo_neto, 
+                   l.cargas_sociales, l.procesado_por, l.created_at,
+                   e.nombre, e.apellido, emp.razon_social
+            FROM liquidaciones l
+            JOIN empleados e ON l.empleado_id = e.id
+            JOIN empresas emp ON l.empresa_id = emp.id
+            ORDER BY l.created_at DESC
+            LIMIT 50
+        """
+        
+        liquidaciones = db.execute_query(query)
+        db.close()
+        
+        if liquidaciones:
+            result = []
+            for liq in liquidaciones:
+                result.append({
+                    'id': liq['id'],
+                    'empleado': f"{liq['nombre']} {liq['apellido']}",
+                    'empresa': liq['razon_social'],
+                    'periodo': liq['periodo'],
+                    'estado': liq['estado'],
+                    'sueldo_bruto': float(liq['sueldo_bruto']) if liq['sueldo_bruto'] else 0,
+                    'sueldo_neto': float(liq['sueldo_neto']) if liq['sueldo_neto'] else 0,
+                    'cargas_sociales': float(liq['cargas_sociales']) if liq['cargas_sociales'] else 0,
+                    'procesado_por': liq['procesado_por'],
+                    'fecha': liq['created_at'].isoformat() if liq['created_at'] else None
+                })
+            return jsonify({'liquidaciones': result}), 200
+        else:
+            return jsonify({'liquidaciones': []}), 200
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo liquidaciones: {e}")
+        return jsonify({'status': 'error', 'mensaje': str(e)}), 500
+
+
+@app.route('/api/tareas', methods=['GET'])
+def obtener_tareas():
+    """Obtiene el historial de tareas"""
+    try:
+        from common.database import Database
+        db = Database()
+        
+        query = """
+            SELECT id, tipo, estado, created_at, updated_at
+            FROM tareas
+            ORDER BY created_at DESC
+            LIMIT 100
+        """
+        
+        tareas = db.execute_query(query)
+        db.close()
+        
+        if tareas:
+            result = []
+            for tarea in tareas:
+                result.append({
+                    'id': tarea['id'],
+                    'tipo': tarea['tipo'],
+                    'estado': tarea['estado'],
+                    'created_at': tarea['created_at'].isoformat() if tarea['created_at'] else None,
+                    'updated_at': tarea['updated_at'].isoformat() if tarea['updated_at'] else None
+                })
+            return jsonify({'tareas': result}), 200
+        else:
+            return jsonify({'tareas': []}), 200
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo tareas: {e}")
+        return jsonify({'status': 'error', 'mensaje': str(e)}), 500
+
+
+@app.route('/api/estadisticas', methods=['GET'])
+def obtener_estadisticas():
+    """Obtiene estadísticas generales del sistema"""
+    try:
+        from common.database import Database
+        db = Database()
+        
+        # Total de liquidaciones
+        query_liq = "SELECT COUNT(*) as total FROM liquidaciones WHERE estado = 'completada'"
+        result_liq = db.execute_query(query_liq)
+        total_liquidaciones = result_liq[0]['total'] if result_liq else 0
+        
+        # Liquidaciones hoy
+        query_hoy = """
+            SELECT COUNT(*) as total FROM liquidaciones 
+            WHERE DATE(created_at) = CURRENT_DATE AND estado = 'completada'
+        """
+        result_hoy = db.execute_query(query_hoy)
+        liquidaciones_hoy = result_hoy[0]['total'] if result_hoy else 0
+        
+        # Total procesado
+        query_total = """
+            SELECT SUM(sueldo_neto) as total FROM liquidaciones 
+            WHERE estado = 'completada'
+        """
+        result_total = db.execute_query(query_total)
+        total_procesado = float(result_total[0]['total']) if result_total and result_total[0]['total'] else 0
+        
+        # Empleados activos
+        query_emp = "SELECT COUNT(*) as total FROM empleados WHERE activo = true"
+        result_emp = db.execute_query(query_emp)
+        empleados_activos = result_emp[0]['total'] if result_emp else 0
+        
+        db.close()
+        
+        return jsonify({
+            'total_liquidaciones': total_liquidaciones,
+            'liquidaciones_hoy': liquidaciones_hoy,
+            'total_procesado': total_procesado,
+            'empleados_activos': empleados_activos
+        }), 200
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo estadísticas: {e}")
+        return jsonify({'status': 'error', 'mensaje': str(e)}), 500
+
+
 if __name__ == '__main__':
     logger.info("Iniciando API REST en puerto 5000...")
     logger.info("Endpoints disponibles:")
