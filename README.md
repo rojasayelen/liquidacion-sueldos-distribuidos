@@ -17,7 +17,7 @@ El sistema implementa una arquitectura distribuida con los siguientes componente
 
 ### Diagrama de Arquitectura
 
-![Arquitectura del Sistema](diagrams/arquitectura-sistema.svg)
+![Arquitectura del Sistema](diagrams/arquitectura-sistema-limpio.svg)
 
 ## Componentes
 
@@ -60,7 +60,7 @@ Cuatro tipos de workers especializados:
 - Validación de CBU
 
 **Worker Cargas Sociales** (Pool: 3 hilos)
-- Declaraciones juradas AFIP/ARCA
+- Declaraciones juradas ARCA
 - Liquidaciones para obras sociales
 - Cálculo de aportes patronales
 
@@ -82,7 +82,7 @@ Cuatro tipos de workers especializados:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/liquidacion-sueldos-distribuido.git
+git clone https://github.com/rojasayelen/liquidacion-sueldos-distribuidos
 cd liquidacion-sueldos-distribuido
 ```
 
@@ -218,13 +218,25 @@ python src/api/rest_api.py
 
 La API estará disponible en: http://localhost:5000
 
+### Iniciar Servidor HTTP para Frontend
+
+Para servir el dashboard web de forma más práctica, abre una nueva terminal y ejecuta:
+
+Terminal 9:
+```bash
+cd frontend
+python -m http.server 8080
+```
+
+El servidor HTTP estará disponible en: http://localhost:8080
+
+**Nota:** El servidor HTTP de Python es ideal para desarrollo. Para producción, considera usar Nginx o Apache.
+
 ### Acceder al Dashboard Web
 
-1. Asegurar que la API REST esté corriendo
-2. Abrir en el navegador:
-```
-frontend/index.html
-```
+1. Asegurar que la API REST esté corriendo (puerto 5000)
+2. Asegurar que el servidor HTTP esté corriendo (puerto 8080)
+3. Abrir en el navegador: http://localhost:8080
 
 El dashboard web permite:
 - Enviar liquidaciones de sueldos
@@ -256,11 +268,7 @@ tarea = {
     'empresa_id': 1,
     'empleado_id': 1,
     'periodo': '2025-10',
-    'procesado_por': 'Juan Perez',
-    'conceptos': [
-        {'codigo': '00001', 'nombre': 'Sueldo Basico', 'tipo': 'remunerativo', 'monto': 500000},
-        {'codigo': '000100', 'nombre': 'Antiguedad', 'tipo': 'remunerativo', 'monto': 50000}
-    ]
+    'procesado_por': 'Juan Perez'
 }
 
 respuesta = cliente.enviar_tarea(tarea)
@@ -333,32 +341,22 @@ liquidacion-sueldos-distribuido/
 - 3 convenios colectivos (Comercio, Metalúrgico, Construcción)
 - 9 conceptos básicos de liquidación
 
-## Tecnologías
-
-- **Python 3.8+**: Lenguaje principal
-- **Socket**: Comunicación cliente-servidor
-- **Threading**: Procesamiento concurrente
-- **RabbitMQ**: Cola de mensajes
-- **PostgreSQL**: Base de datos relacional
-- **Docker**: Containerización de servicios
-- **pika**: Cliente Python para RabbitMQ
-- **psycopg2**: Cliente Python para PostgreSQL
-
-## Características
-
-- Arquitectura distribuida y escalable
-- Procesamiento concurrente con pools de hilos
-- Desacoplamiento mediante colas de mensajes
-- Persistencia de datos en PostgreSQL
-- Simulación de almacenamiento S3
-- Manejo de errores y reintentos
-- Tests de integración automatizados
-
 ## Verificación del Sistema
 
-### Ejecutar Tests de Integración
+### Opción 1: Frontend Web (Visual)
 
-Una vez que el sistema esté funcionando (servidor y workers corriendo), ejecutar:
+1. Abrir http://localhost:8080
+2. Verificar que el indicador muestre "API REST Conectada" (círculo verde)
+3. Enviar una liquidación desde el formulario
+4. Observar los logs en las terminales:
+   - Terminal API: verás la petición HTTP
+   - Terminal Servidor Socket: verás que recibe la tarea
+   - Terminal Worker: verás que procesa la tarea
+5. En el panel de resultados verás "Tarea Aceptada" con el Task ID
+
+### Opción 2: Tests Automatizados (Completo)
+
+Ejecutar tests de integración:
 
 ```bash
 python tests/test_integration.py
@@ -373,6 +371,52 @@ Este script ejecuta automáticamente:
 - Verificación de resultados en base de datos
 
 Resultado esperado: 6/6 tests exitosos
+
+### Opción 3: RabbitMQ Management
+
+Abrir http://localhost:15672 (admin/admin123)
+- Ver las colas creadas
+- Verificar mensajes procesándose en tiempo real
+- Monitorear throughput
+
+### Opción 4: Base de Datos
+
+Conectar a PostgreSQL y verificar datos insertados:
+```bash
+docker exec -it liquidacion-postgres psql -U postgres -d liquidacion_sueldos
+```
+
+Consultas útiles:
+```sql
+-- Ver últimas liquidaciones
+SELECT * FROM liquidaciones ORDER BY created_at DESC LIMIT 10;
+
+-- Ver tareas procesadas
+SELECT * FROM tareas ORDER BY created_at DESC LIMIT 10;
+```
+
+## Tecnologías
+
+- **Python 3.8+**: Lenguaje principal
+- **Socket**: Comunicación cliente-servidor
+- **Threading**: Procesamiento concurrente
+- **RabbitMQ**: Cola de mensajes
+- **PostgreSQL**: Base de datos relacional
+- **Docker**: Containerización de servicios
+- **Flask**: Framework web para API REST
+- **pika**: Cliente Python para RabbitMQ
+- **psycopg2**: Cliente Python para PostgreSQL
+
+## Características
+
+- Arquitectura distribuida y escalable
+- Procesamiento concurrente con pools de hilos
+- Desacoplamiento mediante colas de mensajes
+- Persistencia de datos en PostgreSQL
+- Simulación de almacenamiento S3
+- Manejo de errores y reintentos
+- Tests de integración automatizados
+- Dashboard web para monitoreo en tiempo real
 
 ## Trabajo Práctico
 

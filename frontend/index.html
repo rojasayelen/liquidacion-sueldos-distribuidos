@@ -52,19 +52,6 @@
                         <input type="text" id="liq_procesado_por" value="Dashboard Web" required>
                     </div>
 
-                    <div class="conceptos-container">
-                        <label style="font-weight: bold; margin-bottom: 10px; display: block;">Conceptos</label>
-                        <div id="conceptos-list">
-                            <div class="concepto-item">
-                                <input type="text" placeholder="Código" value="00001">
-                                <input type="text" placeholder="Nombre" value="Sueldo Basico">
-                                <input type="number" placeholder="Monto" value="500000">
-                                <button class="btn-small" onclick="removeConcepto(this)">✕</button>
-                            </div>
-                        </div>
-                        <button class="btn-add" onclick="addConcepto()">+ Agregar Concepto</button>
-                    </div>
-
                     <button class="btn" onclick="enviarLiquidacion()">Enviar Liquidación</button>
                 </div>
 
@@ -217,39 +204,6 @@
             }
         }
 
-        function addConcepto() {
-            const container = document.getElementById('conceptos-list');
-            const div = document.createElement('div');
-            div.className = 'concepto-item';
-            div.innerHTML = `
-                <input type="text" placeholder="Código">
-                <input type="text" placeholder="Nombre">
-                <input type="number" placeholder="Monto">
-                <button class="btn-small" onclick="removeConcepto(this)">✕</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function removeConcepto(button) {
-            button.parentElement.remove();
-        }
-
-        function getConceptos() {
-            const conceptos = [];
-            document.querySelectorAll('.concepto-item').forEach(item => {
-                const inputs = item.querySelectorAll('input');
-                if (inputs[0].value && inputs[1].value && inputs[2].value) {
-                    conceptos.push({
-                        codigo: inputs[0].value,
-                        nombre: inputs[1].value,
-                        tipo: 'remunerativo',
-                        monto: parseFloat(inputs[2].value)
-                    });
-                }
-            });
-            return conceptos;
-        }
-
         function addResult(status, type, data) {
             const resultsDiv = document.getElementById('results');
             
@@ -282,8 +236,7 @@
                 empresa_id: parseInt(document.getElementById('liq_empresa_id').value),
                 empleado_id: parseInt(document.getElementById('liq_empleado_id').value),
                 periodo: document.getElementById('liq_periodo').value,
-                procesado_por: document.getElementById('liq_procesado_por').value,
-                conceptos: getConceptos()
+                procesado_por: document.getElementById('liq_procesado_por').value
             };
 
             try {

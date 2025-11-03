@@ -58,8 +58,7 @@ def liquidacion():
             'empresa_id': data.get('empresa_id'),
             'empleado_id': data.get('empleado_id'),
             'periodo': data.get('periodo'),
-            'procesado_por': data.get('procesado_por', 'Web/Mobile'),
-            'conceptos': data.get('conceptos', [])
+            'procesado_por': data.get('procesado_por', 'Web/Mobile')
         }
         
         respuesta = enviar_tarea_socket(tarea)
