@@ -6,7 +6,9 @@ Sistema distribuido cliente-servidor para procesamiento de liquidaciones de suel
 
 El sistema implementa una arquitectura distribuida con los siguientes componentes:
 
-- **Clientes**: Contadores que envían tareas mediante sockets
+- **Clientes Python**: Se conectan directamente por socket TCP
+- **Clientes Web/Móviles**: Acceden vía API REST (Flask)
+- **API REST (Gateway)**: Convierte peticiones HTTP a socket TCP
 - **Servidores Socket**: Reciben tareas y las publican en RabbitMQ
 - **RabbitMQ**: Sistema de colas de mensajes para desacoplar componentes
 - **Workers Especializados**: Procesan tareas específicas en paralelo
@@ -18,6 +20,15 @@ El sistema implementa una arquitectura distribuida con los siguientes componente
 ![Arquitectura del Sistema](diagrams/arquitectura-sistema.svg)
 
 ## Componentes
+
+### API REST (Gateway HTTP)
+
+Servidor Flask que actúa como puerta de entrada para clientes web y móviles:
+
+- Puerto 5000
+- Recibe peticiones HTTP/JSON
+- Se conecta internamente a servidores socket
+- Endpoints RESTful para todas las operaciones
 
 ### Servidores Socket
 
@@ -49,7 +60,7 @@ Cuatro tipos de workers especializados:
 - Validación de CBU
 
 **Worker Cargas Sociales** (Pool: 3 hilos)
-- Declaraciones juradas ARCA
+- Declaraciones juradas AFIP/ARCA
 - Liquidaciones para obras sociales
 - Cálculo de aportes patronales
 
@@ -71,7 +82,7 @@ Cuatro tipos de workers especializados:
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/rojasayelen/liquidacion-sueldos-distribuidos
+git clone https://github.com/tu-usuario/liquidacion-sueldos-distribuido.git
 cd liquidacion-sueldos-distribuido
 ```
 
@@ -99,13 +110,20 @@ Windows:
 pip install -r requirements.txt
 ```
 
+Esto instalará:
+- pika (RabbitMQ)
+- psycopg2-binary (PostgreSQL)
+- python-dotenv (variables de entorno)
+- flask (API REST)
+- flask-cors (CORS para frontend)
+
 ### 5. Configurar variables de entorno
 
 ```bash
 cp .env.example .env
 ```
 
-Editar `.env` si necesita cambiar alguna configuración.
+Editar `.env` si necesitas cambiar alguna configuración.
 
 ### 6. Levantar infraestructura
 
@@ -126,7 +144,7 @@ docker-compose ps
 
 ### 8. Insertar datos de prueba
 
-IMPORTANTE: Antes de usar el sistema, se debe insertar datos de prueba en la base de datos.
+IMPORTANTE: Antes de usar el sistema, debes insertar datos de prueba en la base de datos.
 
 ```bash
 python scripts/insert_data.py
@@ -187,6 +205,43 @@ python src/cliente/cliente.py
 
 Seleccionar el tipo de tarea a enviar desde el menú interactivo.
 
+## Acceso Web/Mobile (API REST)
+
+El sistema incluye una API REST que permite el acceso desde clientes web y móviles.
+
+### Iniciar API REST
+
+Terminal 8:
+```bash
+python src/api/rest_api.py
+```
+
+La API estará disponible en: http://localhost:5000
+
+### Acceder al Dashboard Web
+
+1. Asegurar que la API REST esté corriendo
+2. Abrir en el navegador:
+```
+frontend/index.html
+```
+
+El dashboard web permite:
+- Enviar liquidaciones de sueldos
+- Generar reportes
+- Crear archivos bancarios
+- Calcular cargas sociales
+- Ver resultados en tiempo real
+
+### Endpoints de la API
+
+- `GET /health` - Estado de la API
+- `POST /api/liquidacion` - Enviar liquidación
+- `POST /api/reporte` - Generar reporte
+- `POST /api/archivo-bancario` - Generar archivo bancario
+- `POST /api/cargas-sociales` - Calcular cargas sociales
+- `POST /api/tarea` - Endpoint genérico
+
 ## Ejemplos de Uso
 
 ### Liquidación de Sueldo
@@ -242,9 +297,14 @@ respuesta = cliente.enviar_tarea(tarea)
 ```
 liquidacion-sueldos-distribuido/
 ├── diagrams/                   # Diagramas de arquitectura
+├── frontend/                   # Dashboard web
+│   ├── index.html             # Interfaz web
+│   └── styles.css             # Estilos CSS
 ├── scripts/                    # Scripts de utilidad
 │   └── insert_data.py         # Inserción de datos de prueba
 ├── src/
+│   ├── api/                   # API REST (Flask)
+│   │   └── rest_api.py       # Servidor HTTP gateway
 │   ├── cliente/               # Cliente socket
 │   ├── servidor/              # Servidores socket
 │   ├── workers/               # Workers especializados

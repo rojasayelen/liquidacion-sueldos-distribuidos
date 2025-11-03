@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Liquidación de Sueldos - Dashboard</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Liquidación de Sueldos</h1>
+            <p>Dashboard de Control - Panel Web/Mobile</p>
+            <div class="api-status">
+                <span class="status-indicator" id="apiStatusIndicator"></span>
+                <span id="apiStatusText">Verificando conexión...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>Panel de Control</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('liquidacion')">Liquidación</button>
+                    <button class="tab" onclick="showTab('reporte')">Reportes</button>
+                    <button class="tab" onclick="showTab('archivo')">Archivos Bancarios</button>
+                    <button class="tab" onclick="showTab('cargas')">Cargas Sociales</button>
+                </div>
+
+                <!-- FORMULARIO LIQUIDACION -->
+                <div id="liquidacion-form" class="form-section active">
+                    <h3 style="margin-bottom: 15px; color: #666;">Liquidación de Sueldos</h3>
+                    
+                    <div class="form-group">
+                        <label>Empresa ID</label>
+                        <input type="number" id="liq_empresa_id" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Empleado ID</label>
+                        <input type="number" id="liq_empleado_id" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Período (YYYY-MM)</label>
+                        <input type="text" id="liq_periodo" value="2025-11" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Procesado por</label>
+                        <input type="text" id="liq_procesado_por" value="Dashboard Web" required>
+                    </div>
+
+                    <div class="conceptos-container">
+                        <label style="font-weight: bold; margin-bottom: 10px; display: block;">Conceptos</label>
+                        <div id="conceptos-list">
+                            <div class="concepto-item">
+                                <input type="text" placeholder="Código" value="00001">
+                                <input type="text" placeholder="Nombre" value="Sueldo Basico">
+                                <input type="number" placeholder="Monto" value="500000">
+                                <button class="btn-small" onclick="removeConcepto(this)">✕</button>
+                            </div>
+                        </div>
+                        <button class="btn-add" onclick="addConcepto()">+ Agregar Concepto</button>
+                    </div>
+
+                    <button class="btn" onclick="enviarLiquidacion()">Enviar Liquidación</button>
+                </div>
+
+                <!-- FORMULARIO REPORTES -->
+                <div id="reporte-form" class="form-section">
+                    <h3 style="margin-bottom: 15px; color: #666;">Generación de Reportes</h3>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Reporte</label>
+                        <select id="rep_tipo_reporte" onchange="toggleReporteFields()">
+                            <option value="recibo_sueldo">Recibo de Sueldo</option>
+                            <option value="reporte_sindical">Reporte Sindical</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="rep_liquidacion_field">
+                        <label>Liquidación ID</label>
+                        <input type="number" id="rep_liquidacion_id" value="1">
+                    </div>
+
+                    <div class="form-group" id="rep_empresa_field" style="display:none;">
+                        <label>Empresa ID</label>
+                        <input type="number" id="rep_empresa_id" value="1">
+                    </div>
+
+                    <div class="form-group" id="rep_periodo_field" style="display:none;">
+                        <label>Período</label>
+                        <input type="text" id="rep_periodo" value="2025-11">
+                    </div>
+
+                    <button class="btn" onclick="enviarReporte()">Generar Reporte</button>
+                </div>
+
+                <!-- FORMULARIO ARCHIVO BANCARIO -->
+                <div id="archivo-form" class="form-section">
+                    <h3 style="margin-bottom: 15px; color: #666;">Archivo Bancario</h3>
+                    
+                    <div class="form-group">
+                        <label>Empresa ID</label>
+                        <input type="number" id="arch_empresa_id" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Período</label>
+                        <input type="text" id="arch_periodo" value="2025-11" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Banco</label>
+                        <select id="arch_banco">
+                            <option value="nacion">Banco Nación</option>
+                            <option value="galicia">Banco Galicia</option>
+                            <option value="santander">Banco Santander</option>
+                            <option value="generico">Genérico</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="enviarArchivoBancario()">Generar Archivo</button>
+                </div>
+
+                <!-- FORMULARIO CARGAS SOCIALES -->
+                <div id="cargas-form" class="form-section">
+                    <h3 style="margin-bottom: 15px; color: #666;">Cargas Sociales</h3>
+                    
+                    <div class="form-group">
+                        <label>Tipo de Carga</label>
+                        <select id="carg_tipo_carga">
+                            <option value="afip">AFIP/ARCA</option>
+                            <option value="obra_social">Obra Social</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Empresa ID</label>
+                        <input type="number" id="carg_empresa_id" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Período</label>
+                        <input type="text" id="carg_periodo" value="2025-11" required>
+                    </div>
+
+                    <button class="btn" onclick="enviarCargasSociales()">Calcular Cargas</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Resultados</h2>
+                <div class="results" id="results">
+                    <p style="color: #999; text-align: center; padding: 20px;">
+                        No hay resultados aún. Envía una tarea para ver los resultados aquí.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        // Verificar conexión API al cargar
+        window.onload = function() {
+            checkAPIStatus();
+        };
+
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('apiStatusIndicator').classList.add('online');
+                    document.getElementById('apiStatusText').textContent = 'API REST Conectada';
+                } else {
+                    throw new Error('API no responde');
+                }
+            } catch (error) {
+                document.getElementById('apiStatusIndicator').classList.add('offline');
+                document.getElementById('apiStatusText').textContent = 'API REST Desconectada - Verifica que el servidor esté corriendo';
+            }
+        }
+
+        function showTab(tabName) {
+            // Ocultar todos los formularios
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Desactivar todos los tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Activar el tab seleccionado
+            event.target.classList.add('active');
+
+            // Mostrar el formulario correspondiente
+            document.getElementById(`${tabName}-form`).classList.add('active');
+        }
+
+        function toggleReporteFields() {
+            const tipo = document.getElementById('rep_tipo_reporte').value;
+            
+            if (tipo === 'recibo_sueldo') {
+                document.getElementById('rep_liquidacion_field').style.display = 'block';
+                document.getElementById('rep_empresa_field').style.display = 'none';
+                document.getElementById('rep_periodo_field').style.display = 'none';
+            } else {
+                document.getElementById('rep_liquidacion_field').style.display = 'none';
+                document.getElementById('rep_empresa_field').style.display = 'block';
+                document.getElementById('rep_periodo_field').style.display = 'block';
+            }
+        }
+
+        function addConcepto() {
+            const container = document.getElementById('conceptos-list');
+            const div = document.createElement('div');
+            div.className = 'concepto-item';
+            div.innerHTML = `
+                <input type="text" placeholder="Código">
+                <input type="text" placeholder="Nombre">
+                <input type="number" placeholder="Monto">
+                <button class="btn-small" onclick="removeConcepto(this)">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeConcepto(button) {
+            button.parentElement.remove();
+        }
+
+        function getConceptos() {
+            const conceptos = [];
+            document.querySelectorAll('.concepto-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value && inputs[2].value) {
+                    conceptos.push({
+                        codigo: inputs[0].value,
+                        nombre: inputs[1].value,
+                        tipo: 'remunerativo',
+                        monto: parseFloat(inputs[2].value)
+                    });
+                }
+            });
+            return conceptos;
+        }
+
+        function addResult(status, type, data) {
+            const resultsDiv = document.getElementById('results');
+            
+            // Limpiar mensaje inicial
+            if (resultsDiv.querySelector('p')) {
+                resultsDiv.innerHTML = '';
+            }
+
+            const resultItem = document.createElement('div');
+            resultItem.className = `result-item ${status}`;
+            
+            const timestamp = new Date().toLocaleString('es-AR');
+            
+            resultItem.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div class="status">${status === 'success' ? '✓ Tarea Aceptada' : '✗ Error'}</div>
+                <div class="details">
+                    <strong>Tipo:</strong> ${type}<br>
+                    ${data.task_id ? `<strong>Task ID:</strong> ${data.task_id}<br>` : ''}
+                    ${data.cola ? `<strong>Cola:</strong> ${data.cola}<br>` : ''}
+                    ${data.mensaje ? `<strong>Mensaje:</strong> ${data.mensaje}` : ''}
+                </div>
+            `;
+            
+            resultsDiv.insertBefore(resultItem, resultsDiv.firstChild);
+        }
+
+        async function enviarLiquidacion() {
+            const data = {
+                empresa_id: parseInt(document.getElementById('liq_empresa_id').value),
+                empleado_id: parseInt(document.getElementById('liq_empleado_id').value),
+                periodo: document.getElementById('liq_periodo').value,
+                procesado_por: document.getElementById('liq_procesado_por').value,
+                conceptos: getConceptos()
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/liquidacion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('success', 'Liquidación de Sueldo', result);
+                } else {
+                    addResult('error', 'Liquidación de Sueldo', result);
+                }
+            } catch (error) {
+                addResult('error', 'Liquidación de Sueldo', { mensaje: error.message });
+            }
+        }
+
+        async function enviarReporte() {
+            const tipo = document.getElementById('rep_tipo_reporte').value;
+            
+            const data = {
+                tipo_reporte: tipo
+            };
+
+            if (tipo === 'recibo_sueldo') {
+                data.liquidacion_id = parseInt(document.getElementById('rep_liquidacion_id').value);
+            } else {
+                data.empresa_id = parseInt(document.getElementById('rep_empresa_id').value);
+                data.periodo = document.getElementById('rep_periodo').value;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/reporte`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('success', 'Generación de Reporte', result);
+                } else {
+                    addResult('error', 'Generación de Reporte', result);
+                }
+            } catch (error) {
+                addResult('error', 'Generación de Reporte', { mensaje: error.message });
+            }
+        }
+
+        async function enviarArchivoBancario() {
+            const data = {
+                empresa_id: parseInt(document.getElementById('arch_empresa_id').value),
+                periodo: document.getElementById('arch_periodo').value,
+                banco: document.getElementById('arch_banco').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/archivo-bancario`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('success', 'Archivo Bancario', result);
+                } else {
+                    addResult('error', 'Archivo Bancario', result);
+                }
+            } catch (error) {
+                addResult('error', 'Archivo Bancario', { mensaje: error.message });
+            }
+        }
+
+        async function enviarCargasSociales() {
+            const data = {
+                tipo_carga: document.getElementById('carg_tipo_carga').value,
+                empresa_id: parseInt(document.getElementById('carg_empresa_id').value),
+                periodo: document.getElementById('carg_periodo').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/api/cargas-sociales`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('success', 'Cargas Sociales', result);
+                } else {
+                    addResult('error', 'Cargas Sociales', result);
+                }
+            } catch (error) {
+                addResult('error', 'Cargas Sociales', { mensaje: error.message });
+            }
+        }
+    </script>
+</body>
+</html>
