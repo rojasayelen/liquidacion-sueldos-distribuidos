@@ -1,6 +1,9 @@
 import socket
 import json
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import time
 from config.settings import SOCKET_HOST, SOCKET_PORT_1, SOCKET_BUFFER_SIZE
 
@@ -9,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Cliente:
-    def __init__(self, host=SOCKET_HOST, port=SOCKET_PORT_1):
+    def __init__(self, host='localhost', port=SOCKET_PORT_1):
         self.host = host
         self.port = port
     

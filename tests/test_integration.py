@@ -12,35 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def test_insertar_datos_prueba():
-    """Inserta datos de prueba en la BD"""
-    logger.info("Insertando datos de prueba...")
-    
-    db = Database()
-    
-    # Insertar empresa
-    db.execute_query(
-        "INSERT INTO empresas (razon_social, cuit, activa) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-        ("Empresa Test SA", "30-12345678-9", True),
-        fetch=False
-    )
-    
-    # Insertar empleados
-    for i in range(1, 6):
-        db.execute_query(
-            """INSERT INTO empleados (empresa_id, convenio_id, cuil, nombre, apellido, legajo, cbu, activo)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-               ON CONFLICT (empresa_id, cuil) DO NOTHING""",
-            (1, 1, f"20-3456789{i}-0", f"Empleado{i}", f"Apellido{i}", f"LEG00{i}", "0000003100012345678901", True),
-            fetch=False
-        )
-    
-    db.close()
-    logger.info("Datos de prueba insertados correctamente")
-
-
 def test_liquidacion():
-    """Test de liquidación de sueldo"""
+    """Test de liquidacion de sueldo"""
     logger.info("\n=== TEST 1: LIQUIDACION DE SUELDO ===")
     
     cliente = Cliente()
@@ -68,7 +41,7 @@ def test_liquidacion():
 
 
 def test_reporte():
-    """Test de generación de reporte"""
+    """Test de generacion de reporte"""
     logger.info("\n=== TEST 2: GENERACION DE REPORTE ===")
     
     time.sleep(2)
@@ -92,7 +65,7 @@ def test_reporte():
 
 
 def test_archivo_bancario():
-    """Test de generación de archivo bancario"""
+    """Test de generacion de archivo bancario"""
     logger.info("\n=== TEST 3: ARCHIVO BANCARIO ===")
     
     time.sleep(2)
@@ -117,7 +90,7 @@ def test_archivo_bancario():
 
 
 def test_cargas_sociales():
-    """Test de cálculo de cargas sociales"""
+    """Test de calculo de cargas sociales"""
     logger.info("\n=== TEST 4: CARGAS SOCIALES ===")
     
     time.sleep(2)
@@ -200,11 +173,8 @@ if __name__ == '__main__':
     logger.info("\n" + "="*60)
     logger.info("SUITE DE TESTS DE INTEGRACION")
     logger.info("="*60)
-    
-    # Insertar datos de prueba
-    test_insertar_datos_prueba()
-    
-    time.sleep(2)
+    logger.info("\nNOTA: Asegurese de haber ejecutado scripts/insert_data.py primero")
+    logger.info("y de tener el servidor y los workers corriendo.\n")
     
     # Ejecutar tests
     resultados = []

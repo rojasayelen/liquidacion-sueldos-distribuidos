@@ -49,7 +49,7 @@ Cuatro tipos de workers especializados:
 - Validación de CBU
 
 **Worker Cargas Sociales** (Pool: 3 hilos)
-- Declaraciones juradas AFIP/ARCA
+- Declaraciones juradas ARCA
 - Liquidaciones para obras sociales
 - Cálculo de aportes patronales
 
@@ -69,12 +69,14 @@ Cuatro tipos de workers especializados:
 ## Instalación
 
 ### 1. Clonar el repositorio
+
 ```bash
-git clone https://github.com/rojasayelen/tpo_3_redes
+git clone https://github.com/rojasayelen/liquidacion-sueldos-distribuidos
 cd liquidacion-sueldos-distribuido
 ```
 
 ### 2. Crear entorno virtual
+
 ```bash
 python -m venv .venv
 ```
@@ -92,23 +94,27 @@ Windows:
 ```
 
 ### 4. Instalar dependencias
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 5. Configurar variables de entorno
+
 ```bash
 cp .env.example .env
 ```
 
-Editar `.env` si necesitas cambiar alguna configuración.
+Editar `.env` si necesita cambiar alguna configuración.
 
 ### 6. Levantar infraestructura
+
 ```bash
 docker-compose up -d
 ```
 
 Esto iniciará RabbitMQ y PostgreSQL. Verificar que estén corriendo:
+
 ```bash
 docker-compose ps
 ```
@@ -117,6 +123,19 @@ docker-compose ps
 
 - RabbitMQ Management: http://localhost:15672 (admin/admin123)
 - PostgreSQL: localhost:5432 (postgres/postgres123)
+
+### 8. Insertar datos de prueba
+
+IMPORTANTE: Antes de usar el sistema, se debe insertar datos de prueba en la base de datos.
+
+```bash
+python scripts/insert_data.py
+```
+
+Este script crea:
+- 1 empresa de prueba (Empresa Test SA)
+- 5 empleados de prueba
+- Datos necesarios para ejecutar el sistema
 
 ## Uso
 
@@ -168,14 +187,10 @@ python src/cliente/cliente.py
 
 Seleccionar el tipo de tarea a enviar desde el menú interactivo.
 
-### Ejecutar Tests de Integración
-```bash
-python tests/test_integration.py
-```
-
 ## Ejemplos de Uso
 
 ### Liquidación de Sueldo
+
 ```python
 from cliente.cliente import Cliente
 
@@ -197,6 +212,7 @@ respuesta = cliente.enviar_tarea(tarea)
 ```
 
 ### Generar Archivo Bancario
+
 ```python
 tarea = {
     'tipo': 'archivo_bancario',
@@ -209,6 +225,7 @@ respuesta = cliente.enviar_tarea(tarea)
 ```
 
 ### Calcular Cargas Sociales
+
 ```python
 tarea = {
     'tipo': 'carga_social',
@@ -221,9 +238,12 @@ respuesta = cliente.enviar_tarea(tarea)
 ```
 
 ## Estructura del Proyecto
+
 ```
 liquidacion-sueldos-distribuido/
 ├── diagrams/                   # Diagramas de arquitectura
+├── scripts/                    # Scripts de utilidad
+│   └── insert_data.py         # Inserción de datos de prueba
 ├── src/
 │   ├── cliente/               # Cliente socket
 │   ├── servidor/              # Servidores socket
@@ -274,6 +294,26 @@ liquidacion-sueldos-distribuido/
 - Manejo de errores y reintentos
 - Tests de integración automatizados
 
+## Verificación del Sistema
+
+### Ejecutar Tests de Integración
+
+Una vez que el sistema esté funcionando (servidor y workers corriendo), ejecutar:
+
+```bash
+python tests/test_integration.py
+```
+
+Este script ejecuta automáticamente:
+- Test de liquidación de sueldo
+- Test de generación de reporte
+- Test de archivo bancario
+- Test de cargas sociales
+- Test de carga concurrente
+- Verificación de resultados en base de datos
+
+Resultado esperado: 6/6 tests exitosos
+
 ## Trabajo Práctico
 
 Este proyecto fue desarrollado como parte del Trabajo Práctico Final de la materia DevOps y Redes.
@@ -289,7 +329,7 @@ Este proyecto fue desarrollado como parte del Trabajo Práctico Final de la mate
 7. Código documentado y funcional
 
 ## Autor
-Ayelen Rojas
+Contador Publica Nacional Ayelen Rojas 
 Desarrollado para el TP3 de la Tecnicatura en Desarrollo de Software.
 
 ## Licencia

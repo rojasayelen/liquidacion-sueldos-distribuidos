@@ -1,5 +1,8 @@
 import json
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from concurrent.futures import ThreadPoolExecutor
 from common.rabbitmq_handler import RabbitMQHandler
 from common.database import Database
